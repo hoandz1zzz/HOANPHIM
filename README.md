@@ -1,10 +1,10 @@
 # 🎬 HoanPhim - Microservices Movie Streaming Platform
 
-HoanPhim là nền tảng xem phim trực tuyến được xây dựng theo kiến trúc **Microservices Monorepo**, tách biệt hoàn toàn các dịch vụ nghiệp vụ, cơ sở dữ liệu độc lập (Database-per-Service), bộ nhớ đệm Redis và giao diện Cinema Dark UI tối ưu cho cả Desktop lẫn Mobile.
+HoanPhim là nền tảng xem phim trực tuyến được xây dựng theo kiến trúc Microservices, tách biệt hoàn toàn các dịch vụ nghiệp vụ, cơ sở dữ liệu độc lập (Database-per-Service), bộ nhớ đệm Redis và giao diện Cinema Dark UI tối ưu cho cả Desktop lẫn Mobile.
 
 ---
 
-## 🏗️ System Architecture
+## Kiến trúc hệ thống
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
 
 ---
 
-## ✨ Engineering Highlights
+## Các điểm nhấn kỹ thuật
 
 - **API Gateway JWT Injection (`optionalAuth`)**: Xác thực JWT tập trung tại `api-gateway`, tự động giải mã thông tin người dùng (`userId`, `name`, `avatar`), loại bỏ header giả mạo từ client và truyền xuống các downstream services qua `x-user-*` headers.
 - **Database-per-Service Pattern & Data Denormalization**: `auth-service` và `interaction-service` sở hữu 2 PostgreSQL database hoàn toàn độc lập. Dữ liệu tương tác (`Watchlist`, `WatchHistory`, `Comment`) được phi chuẩn hóa (`userName`, `userAvatar`, `movieName`, `thumbUrl`) để truy vấn nhanh mà không cần join chéo service.
@@ -32,7 +32,7 @@ flowchart LR
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 | :--- | :--- |
@@ -53,7 +53,7 @@ flowchart LR
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 Đảm bảo máy đã cài đặt **Docker Desktop** và **Node.js >= 18**.
 
