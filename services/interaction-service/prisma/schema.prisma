@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Watchlist {
+  id             String   @id @default(uuid())
+  userId         String
+  movieSlug      String
+  movieName      String
+  thumbUrl       String?
+  posterUrl      String?
+  quality        String?
+  currentEpisode String?
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, movieSlug])
+}
+
+model WatchHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  movieSlug   String
+  movieName   String
+  thumbUrl    String?
+  posterUrl   String?
+  episodeSlug String
+  episodeName String
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, movieSlug])
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  userId     String
+  userName   String
+  userAvatar String?
+  movieSlug  String
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([movieSlug])
+}
