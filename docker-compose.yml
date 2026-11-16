@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # 1. Database độc lập cho Auth Service (Cổng 5435)
+  user-db:
+    image: postgres:16-alpine
+    container_name: netflix_user_db
+    restart: always
+    environment:
+      POSTGRES_USER: auth_admin
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: user_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+
+  # 2. Database độc lập cho Interaction Service (Cổng 5434)
+  interaction-db:
+    image: postgres:16-alpine
+    container_name: netflix_interaction_db
+    restart: always
+    environment:
+      POSTGRES_USER: inter_admin
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: interaction_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - interaction_db_data:/var/lib/postgresql/data
+
+  # 3. Redis Cache cho Catalog Service (Cổng 6379)
+  catalog-redis:
+    image: redis:7-alpine
+    container_name: netflix_catalog_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  user_db_data:
+  interaction_db_data:
+  redis_data:

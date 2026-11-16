@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build & Cache
+.next/
+frontend/.next/
+dist/
+**/dist/
+*.tsbuildinfo
+
+# Environment variables
+.env
+**/.env*
+!.env.example
+!**/.env.example
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

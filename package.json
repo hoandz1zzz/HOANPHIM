@@ -1,0 +1,12 @@
+{
+  "name": "netflix-microservices",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && npm --prefix api-gateway install && npm --prefix services/auth-service install && npm --prefix services/catalog-service install && npm --prefix services/interaction-service install && npm --prefix frontend install",
+    "db-push": "npx --prefix services/auth-service prisma db push --schema=services/auth-service/prisma/schema.prisma && npx --prefix services/auth-service prisma generate --schema=services/auth-service/prisma/schema.prisma && npx --prefix services/interaction-service prisma db push --schema=services/interaction-service/prisma/schema.prisma && npx --prefix services/interaction-service prisma generate --schema=services/interaction-service/prisma/schema.prisma",
+    "dev": "concurrently -n \"GATEWAY,AUTH,CATALOG,INTERACT,FRONTEND\" -c \"bgBlue.bold,bgMagenta.bold,bgCyan.bold,bgGreen.bold,bgRed.bold\" \"npm --prefix api-gateway run dev\" \"npm --prefix services/auth-service run dev\" \"npm --prefix services/catalog-service run dev\" \"npm --prefix services/interaction-service run dev\" \"npm --prefix frontend run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
