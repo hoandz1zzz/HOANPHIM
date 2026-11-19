@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Bebas_Neue } from 'next/font/google';
+import HoanPhimChatWidget from '@/components/chat/HoanPhimChatWidget';
 import Navbar from '@/components/layout/Navbar';
 import { AuthProvider } from '@/context/AuthContext';
 import './globals.css';
@@ -26,6 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <main className="pt-16">{children}</main>
+          <HoanPhimChatWidget />
         </AuthProvider>
       </body>
     </html>
