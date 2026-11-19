@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  # 1. Database độc lập cho Auth Service (Cổng 5435)
+  # 1. Database độc lập cho Auth Service (Host: 5436, Container: 5432)
   user-db:
     image: postgres:16-alpine
     container_name: netflix_user_db
@@ -11,11 +9,16 @@ services:
       POSTGRES_PASSWORD: secretpassword
       POSTGRES_DB: user_db
     ports:
-      - "5435:5432"
+      - "5436:5432"
     volumes:
       - user_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_admin -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  # 2. Database độc lập cho Interaction Service (Cổng 5434)
+  # 2. Database độc lập cho Interaction Service (Host: 5434, Container: 5432)
   interaction-db:
     image: postgres:16-alpine
     container_name: netflix_interaction_db
@@ -28,6 +31,11 @@ services:
       - "5434:5432"
     volumes:
       - interaction_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inter_admin -d interaction_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # 3. Redis Cache cho Catalog Service (Cổng 6379)
   catalog-redis:
@@ -38,6 +46,92 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # 4. Auth Service (Cổng 4001)
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: hoanphim_auth_service
+    restart: always
+    environment:
+      PORT: 4001
+      DATABASE_URL: postgresql://auth_admin:secretpassword@user-db:5432/user_db
+      JWT_SECRET: supersecret
+    ports:
+      - "4001:4001"
+    depends_on:
+      user-db:
+        condition: service_healthy
+
+  # 5. Catalog Service (Cổng 4002)
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+    container_name: hoanphim_catalog_service
+    restart: always
+    environment:
+      PORT: 4002
+      REDIS_URL: redis://catalog-redis:6379
+      NGUONC_API_BASE: https://phim.nguonc.com/api
+      CACHE_TTL_SECONDS: 1800
+    ports:
+      - "4002:4002"
+    depends_on:
+      catalog-redis:
+        condition: service_healthy
+
+  # 6. Interaction Service (Cổng 4003)
+  interaction-service:
+    build:
+      context: ./services/interaction-service
+    container_name: hoanphim_interaction_service
+    restart: always
+    environment:
+      PORT: 4003
+      DATABASE_URL: postgresql://inter_admin:secretpassword@interaction-db:5432/interaction_db
+    ports:
+      - "4003:4003"
+    depends_on:
+      interaction-db:
+        condition: service_healthy
+
+  # 7. API Gateway (Cổng 8000)
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: hoanphim_api_gateway
+    restart: always
+    environment:
+      PORT: 8000
+      JWT_SECRET: supersecret
+      CORS_ORIGIN: http://localhost:3000
+      AUTH_SERVICE_URL: http://auth-service:4001
+      CATALOG_SERVICE_URL: http://catalog-service:4002
+      INTERACTION_SERVICE_URL: http://interaction-service:4003
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - catalog-service
+      - interaction-service
+
+  # 8. Frontend Next.js (Cổng 3000)
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    container_name: hoanphim_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api-gateway
 
 volumes:
   user_db_data:
