@@ -2,7 +2,7 @@ import { getCachedJson, setCachedJson } from '../config/redis';
 
 const NGUONC_API_BASE = process.env.NGUONC_API_BASE || 'https://phim.nguonc.com/api';
 const CACHE_TTL_SECONDS = Number(process.env.CACHE_TTL_SECONDS) || 1800;
-const REQUEST_TIMEOUT_MS = 10000;
+const REQUEST_TIMEOUT_MS = 25000;
 
 export class UpstreamError extends Error {
   constructor(
@@ -14,20 +14,27 @@ export class UpstreamError extends Error {
   }
 }
 
-async function fetchJsonFromNguonc<T>(url: string): Promise<T> {
-  const response = await fetch(url, {
-    headers: { Accept: 'application/json' },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
+async function fetchJsonFromNguonc<T>(url: string, retries = 1): Promise<T> {
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
 
-  if (!response.ok) {
-    throw new UpstreamError(
-      `NguonC API returned ${response.status} ${response.statusText}`,
-      response.status === 404 ? 404 : 502
-    );
+    if (!response.ok) {
+      throw new UpstreamError(
+        `NguonC API returned ${response.status} ${response.statusText}`,
+        response.status === 404 ? 404 : 502
+      );
+    }
+
+    return (await response.json()) as T;
+  } catch (err) {
+    if (retries > 0 && !(err instanceof UpstreamError)) {
+      return fetchJsonFromNguonc<T>(url, retries - 1);
+    }
+    throw err;
   }
-
-  return (await response.json()) as T;
 }
 
 async function fetchWithCache<T>(cacheKey: string, url: string): Promise<T> {
